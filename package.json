@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Brandon0329/JSChatApp/issues"
   },
-  "homepage": "https://github.com/Brandon0329/JSChatApp#readme"
+  "homepage": "https://github.com/Brandon0329/JSChatApp#readme",
+  "dependencies": {
+    "mongodb": "^3.2.7"
+  }
 }
