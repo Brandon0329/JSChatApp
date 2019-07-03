@@ -5,69 +5,72 @@ const UTF8 = 'utf8';
 const PORT = 8000;
 const HOST = 'localhost';
 
-class chatServer {
-    constructor() {
-	   this.users = new Map(); 		/* Maps user names to Sockets. */
-	   this.chatSpaces = new Set(); 	/* Set for open chat rooms. */
-		/* Maybe have another Map for socket to user mappings? */
+class ChatServer {
+  constructor() {
+    this.users = new Map();       /* Maps users to Sockets. */
+    this.sockets = new Map();     /* Maps sockets to users. */
+    this.chatSpaces = New Set();  /* Set for open chat rooms. */
+    this.server = null;
+  }
+
+  init(debug) {
+    this.server = net.createServer(function(socket) {
+      if(debug)
+        console.log('New connection created');
+
+      socket.write('Welcome to the JSChatApp!', UTF8);
+      socket.on('data', function(data) {
+        if(data[0] === '\\')
+          userCommandHandler(socket, data);
+        else {
+          /* Determine way of finding destination message.
+           * Message may be to a single user or to a chat room.
+           */
+        }
+      });
+    });
+
+    return this;
+  }
+
+  start() {
+    this.server.listen(PORT, HOST);
+  }
+
+  userCommandHandler(socket, command) {
+    command = command.split(' ');
+
+    switch(command[0]) {
+      case '\\l':
+        listUsers(socket);
+        break;
+      case '\\s'
+        setUserAndSocket(socket, command[1]);
+      default:
+        socket.write('This is not a valid command. Here is a list of valid commands:\n');
+        /* List valid commands here. */
     }
+  }
 
-    init(debug) {
-	   this.server = net.createServer(function(socket) {
-		  if(debug)
-			 console.log('New connection cratead');
+  listUsers(socket) {
+    socket.write('List of users:\n\n', UTF8);
 
-		  socket.write("Welcome to the JSChat App!", UTF8);
+    Array.from(users.keys()).forEach(function(user) {
+      socket.write(`${user}\n`, UTF8);
+    });
+  }
 
-		  socket.on('data', function(data) {
-			 if(data[0] === '\\')
-				    userCommandHandler(socket, data);
-			 else {
-				    /* Determine way of finding destination of message.
-					 * May be to a single user or to a chat room.
-					 */
-			 }
-		  });
-	   });
+  setUserAndSocket(socket, user) {
+    this.uses.set(user, socket);
+    this.sockets.set(socket, user);
+  }
 
-	   return this;
-	}
-
-    /** Make server listen for connections. init() must be called first. */
-    start() {
-	   this.server.listen(PORT, HOST);
-    }
-
-    /** Handle commands from users. */
-    userCommandHandler(socket, command) {
-	   command = command.split(' ');
-
-	   switch(command[0]) {
-		  case '\\l':
-			 listUsers(socket);
-			 break;
-		  default:
-			 socket.write('This is not a valid command. Here is a list of valid commands:\n');
-			 /* List valid commands here. */
-	   }
-    }
-
-    /** List all users online. */
-    listUsers(socket) {
-	   socket.write('List of users:\n\n', UTF8);
-
-	   Array.from(users.keys()).forEach(function(user) {
-		  socket.write(`${user}\n`, UTF8);
-	   });
-    }
-
-    /** Send a message to every user in the server. */
-    globalMessage(msg) {
-	   Array.from(users.values()).forEach(function(socket) {
-		  socket.write(msg, UTF8);
-	   });
-	   /* Need a way to send message to every chat room.
-		* Trying to figure out functionality for that.
-		*/
-    }
+  globalMessage(msg) {
+    Array.from(users.values()).forEach(function(socket) {
+      socket.write(msg, UTF8);
+      /* Need a way to send message to every chat room.
+       * Trying to figure out implementation for chat rooms.
+       */
+    });
+  }
 }
