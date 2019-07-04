@@ -5,6 +5,8 @@ const UTF8 = 'utf8';
 const PORT = 8000;
 const HOST = 'localhost';
 
+/* ALL MESSAGES SENT MUST GO THROUGH SERVER. */
+
 class ChatServer {
   constructor() {
     this.users = new Map();       /* Maps users to Sockets. */
@@ -41,6 +43,10 @@ class ChatServer {
     command = command.split(' ');
 
     switch(command[0]) {
+      case '\\C':
+        /* Connect to a chat room. */
+      case '\\c':
+        connectWithUser(socket, command);
       case '\\l':
         listUsers(socket);
         break;
@@ -52,22 +58,33 @@ class ChatServer {
     }
   }
 
+  connectWithUser(socket, command) {
+    let user = command.split(' ')[1];
+
+    if(!user)
+      socket.write('$Server$ Please specify a user.', UTF8);
+    else if(!this.users.get(user))
+      socket.write(`$Server$ ${user} not found.`, UTF8);
+    else
+      socket.write(`$Server$ Opened connection with ${user}.`, UTF8);
+  } 
+
   listUsers(socket) {
     socket.write('List of users:\n\n', UTF8);
 
     Array.from(users.keys()).forEach(function(user) {
-      socket.write(`${user}\n`, UTF8);
+      socket.write(`$Server$ ${user}\n`, UTF8);
     });
   }
 
   setUserAndSocket(socket, user) {
-    this.uses.set(user, socket);
+    this.users.set(user, socket);
     this.sockets.set(socket, user);
   }
 
   globalMessage(msg) {
     Array.from(users.values()).forEach(function(socket) {
-      socket.write(msg, UTF8);
+      socket.write(`Server> ${msg}`, UTF8);
       /* Need a way to send message to every chat room.
        * Trying to figure out implementation for chat rooms.
        */
