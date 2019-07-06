@@ -88,6 +88,7 @@ class Client {
         console.log(`Now connected to ${name}`);
       } else
         console.log(`${name} not found`);
+        
     }
   }
 }
