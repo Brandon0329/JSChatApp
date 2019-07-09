@@ -40,19 +40,6 @@ class ChatServer {
           else
             command.bind(serverRef)(socket, data);
         }
-        // /* User sent a command to the server */
-        // if(data[0] === '\\') {
-        //   let command = data.split(' ')[0].slice(1);
-        //   command = utils[command];
-        //   if(command === undefined)
-        //     socket.write('This is not a command.', 'utf8');  List commands here. 
-        //   else 
-        //     /* Bind server reference to command, and run it. */
-        //     command.bind(serverRef)(socket, data);
-        // } else { /* User sent a message to someone. */
-        //   /* Send command to appropriate user(s). */
-        //   globalMessage(data);
-        // }
       });
 
       socket.on('error', function(err) {
