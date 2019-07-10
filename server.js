@@ -26,6 +26,7 @@ class ChatServer {
     /* Thinking that every message sent by a user is a "command". */
     this.server = net.createServer(function(socket) {
       /* When receiving a command... e.g. utils[command_name].bind(this)(socket, message). */
+      socket.setEncoding('utf8');
       socket.on('data', function(data) {
         data = data.toString();
 
@@ -52,7 +53,7 @@ class ChatServer {
           serverRef.users.delete(user);
         } else
           throw err;
-      })
+      });
     });
 
     this.server.on('error', function(err) {
@@ -62,7 +63,7 @@ class ChatServer {
     return this;
   }
 
-  start(port = 8000, host = 'localhost') {
+  start(port=8000, host='localhost') {
     this.server.listen(port, host);
     console.log(`Server is listening on port ${port}`);
   }

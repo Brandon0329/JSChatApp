@@ -8,7 +8,7 @@ class ChatClient {
     this.currChatID = '';
   }
 
-  connectToServer(port = 8000, host = 'localhost', username) {
+  connectToServer(port=8000, host='localhost', username) {
     this.socket = new net.Socket();
     this.socket.setEncoding('utf8');
 
@@ -16,8 +16,12 @@ class ChatClient {
       console.log(data);
     });
 
+    /* Do error handling better... */
     this.socket.on('error', function(err) {
-      console.log(`An error has occurred\n ERRCODE ${err.code}`);
+      if(err.code === 'ECONNRESET')
+        console.log('Server is currently down. Try again later.');
+      else if(err.code === 'ERR_STREAM_DESTROYED')
+        throw err;
     });
 
     this.socket.connect(port, host, function() {
