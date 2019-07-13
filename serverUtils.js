@@ -1,5 +1,8 @@
 const utils = {
-  /** Add a user to server data structures when user connects. */
+  /** Add a user to server data structures when user connects.
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
   c(socket, command) {
     console.log("new user connecting");
     let user = command.split(' ')[1];
@@ -12,12 +15,18 @@ const utils = {
     }
   },
 
-  /** Add a user to the client's friend list. */
+  /** Add a user to the client's friend list.
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
   f(socket, command) {
     return;
   },
 
-  /** List users on server. */
+  /** List users on server.
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
   l(socket, command) {
     return;
   },
@@ -27,33 +36,38 @@ const utils = {
    *  @param {String} command client's command
    */
   m(socket, command) {
-    /* May not need to use promises here... */
-    /* Tried using promises because messages weren't being parsed when sent to fast. */
-    let slicePromise = function() {
-      return new Promise(function(resolve, reject) {
-        resolve(command.slice(3));
-      });
-    };
+    // Debugging...
+    console.log(command);
+    /* Removing command from message. */
+    let message = command.slice(3);
+    let src = this.sockets.get(socket);
+    let dest = message.split(' ')[0];
 
-    let users = this.users.values();
-    let sender = this.sockets.get(socket);
-    slicePromise()
-      .then(function(message) {
-        console.log(message);
-        for(let user of users)
-          if(socket !== user)
-            user.write(`${sender}> ${message}`, 'utf8');
-      })
-      .catch(function(err) {
-        console.log(`Error in m command: ${err.code}`);
-      });
-    // let message = command.slice(3);
-    // console.log(message);
-    // for(let user of this.users.values())
-    //   user.write(`Server> ${message}`, 'utf8');
+    // Need to handle case where user types bad username
+    console.log(message); // For debugging
+    if(dest === '$MAINSERVER') {
+      for(let user of this.users.values())
+        if(user !== socket)
+          user.write(`$MAINSERVER ${src}> ${message.slice(dest.length + 1)}`);
+    }
+    else if(this.users.get(dest) === undefined)
+      socket.write('This user does not exist. Run \\l command to list users.');
+    else
+      this.users.get(dest).write(`${src} ${src}> ${message.slice(dest.length + 1)}`);
   },
 
+  /* Create a new chat room....maybe.
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
+  n(socket, command) {
+    return;
+  },
 
+  /** I forgot what this was supposed to do...
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
   u(socket, command) {
     return;
   }

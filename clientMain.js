@@ -3,7 +3,7 @@ const client = require('./client');
 
 /* For testing. Add database logic later. */
 let ID = Math.floor(Math.random() * 500000);
-let user = new client()
+let user = new client();
 user.connectToServer(8000, 'localhost', `user${ID}`);
 
 /* Main logic of how clients will communicate
@@ -13,8 +13,36 @@ process.stdin.on('data', function(data) {
   /* Data is appended with /r/n. Remove those characters. */
   /* Might need to change this. */
   data = data.toString().replace(/\r\n/, '');
-  if(data.length > 0)
-    user.socket.write(`\\m ${data}`, 'utf8');
+  if(data.length > 0) {
+    if(data[0] === '\\') {
+      /* Run some handler here. */
+      /* Or a switch statement... */
+      let command = data.split(' ')[0];
+      switch(command) {
+        case '\\s':
+          // Maybe check if valid user before continuing... */
+          user.activeChat = data.split(' ')[1];
+          console.log(`Your messages will now be sent to ${user.activeChat}`);
+          /* Flush any queued messages to from activeChat to client console. */
+          user.flushMessages(user.activeChat);
+          break;
+        case '\\l': // List users or send to server??
+        case '\\g': // Switch to global chat as active chat
+          user.activeChat = '$MAINSERVER';
+          console.log('Your messages will now be sent to the main server.');
+          user.flushMessages('$MAINSERVER');
+          break;
+        //For debugging
+        case '\\m':
+          console.log(JSON.stringify(user.messageQueues.entries()));
+          break;
+        default:
+          console.log("This is not a command. List commands here...");
+          break;
+      }
+    } else
+      user.socket.write(`\\m ${user.activeChat} ${data}`, 'utf8');
+  }
 });
 
 /* This test causes the server to act weird. */
