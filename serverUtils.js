@@ -1,3 +1,5 @@
+const room = require('./chatRoom');
+
 const utils = {
   /** Add a user to server data structures when user connects.
    *  @param {net.Socket} socket source client
@@ -61,6 +63,28 @@ const utils = {
    *  @param {String} command client's command
    */
   n(socket, command) {
+    let roomName = command.split(' ')[1];
+
+    /* If roomName was supplied, attempt to create a chat room. */
+    if(roomName) {
+      let i = 0;
+      while(i < this.availablePorts.length && this.availablePorts[i])
+        i++;
+
+      if(i == this.availablePorts.length) {
+        /* Let user know that no more ports available; can't create chat room. */
+        /* Find a way to make sure that this message is never queued. This is an IMPORTANT message. */
+        socket.write('$MAINSERVER Server> No more chat rooms can be created at this time. Try again later.');
+      } else {
+        this.availablePorts[i] = true;
+        let chatRoom = new room(roomName, 8000 + i + 1);
+        chatRoom.init().start(8000 + i + 1);
+        // Should probably make sure that nothing went wrong before mapping the chat room.
+        this.chatRooms.set(roomName, chatRoom);
+        // Send port number to user.
+        socket.write(`$ ${roomName} ${8000 + i + 1}`);
+      }
+    } else
     return;
   },
 

@@ -20,7 +20,8 @@ process.stdin.on('data', function(data) {
       let command = data.split(' ')[0];
       switch(command) {
         case '\\s':
-          // Maybe check if valid user before continuing... */
+          // TODO: Add logic for switching chat rooms. Should also change active socket.
+          // Check if valid user before continuing... */
           user.activeChat = data.split(' ')[1];
           console.log(`Your messages will now be sent to ${user.activeChat}`);
           /* Flush any queued messages to from activeChat to client console. */
@@ -32,9 +33,13 @@ process.stdin.on('data', function(data) {
           console.log('Your messages will now be sent to the main server.');
           user.flushMessages('$MAINSERVER');
           break;
-        //For debugging
+        // For debugging. This ain't working
         case '\\m':
           console.log(JSON.stringify(user.messageQueues.entries()));
+          break;
+        case '\\n':
+          console.log('Creating new chat room. Please wait...');
+          user.socket.write(data, 'utf8');
           break;
         default:
           console.log("This is not a command. List commands here...");

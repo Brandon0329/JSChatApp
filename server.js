@@ -14,8 +14,9 @@ class ChatServer {
     this.users = new Map();
     this.sockets = new Map();
     /* Have separate servers as chat rooms? */
-    /* <string, Server> */
+    /* <String, ChatRooms> */
     this.chatRooms = new Map();
+    this.availablePorts = []; // For chat rooms. ONLY 10 chatrooms allowed. Needed to bound this.
   }
 
   init() {
@@ -23,10 +24,15 @@ class ChatServer {
     /* Reference changes to socket reference in handler. */
     let serverRef = this;
 
+    /* Initialize available ports array. */
+    for(let i = 0; i < 10; i++)
+      this.availablePorts.push(false);
+
     /* Thinking that every message sent by a user is a "command". */
     this.server = net.createServer(function(socket) {
       /* When receiving a command... e.g. utils[command_name].bind(this)(socket, message). */
       socket.setEncoding('utf8');
+
       socket.on('data', function(data) {
         data = data.toString();
 
@@ -34,8 +40,8 @@ class ChatServer {
           console.log('This should not happen. Every message must start with \\');
         else {
           /* Parse command from client input. */
-          let command = data.split(' ')[0].slice(1);
-          command = utils[command];
+          // let command = data.split(' ')[0].slice(1);
+          let command = utils[data.split(' ')[0].slice(1)];
           if(!command)
             socket.write('This is not a valid command.', 'utf8'); /* List commands here. */
           else
@@ -47,7 +53,7 @@ class ChatServer {
         if(err.code === 'ECONNRESET') {
           /* TODO: Send message to every user that this user has left. */
           let user = serverRef.sockets.get(this);
-          console.log(`${user} has left the chat.`);
+          serverRef.globalMessage(`${user} has left the chat.`);
           /* Remove user from chat. */
           serverRef.sockets.delete(this);
           serverRef.users.delete(user);
@@ -63,9 +69,24 @@ class ChatServer {
     return this;
   }
 
+  /** Start the server.
+    * @param {number} port port the server will listen on
+    * @param {string} host address that will host the server
+    */
   start(port=8000, host='localhost') {
     this.server.listen(port, host);
     console.log(`Server is listening on port ${port}`);
+  }
+
+  /** Send a message to all users online.
+    * @param {String} message the message that will be sent
+    */
+  globalMessage(message) {
+    /* Should also send the message to every chatroom. */
+    /* TODO: code logic to send message to every chatroom. */
+    for(let user of this.users.values())
+      if(!user.destroyed)
+        user.write(`$MAINSERVER Server> ${message}`);
   }
 }
 
