@@ -9,6 +9,9 @@ user.connectToServer(8000, 'localhost', `user${ID}`);
 /* Main logic of how clients will communicate
  * Have handler instead of just writing.
  */
+
+/* TODO: save main server socket so client can easily access main server whenever needed. */
+
 process.stdin.on('data', function(data) {
   /* Data is appended with /r/n. Remove those characters. */
   /* Might need to change this. */
@@ -34,11 +37,16 @@ process.stdin.on('data', function(data) {
           user.flushMessages('$MAINSERVER');
           break;
         // For debugging. This ain't working
-        case '\\m':
+        case '\\showMap':
           console.log(JSON.stringify(user.messageQueues.entries()));
           break;
         case '\\n':
           console.log('Creating new chat room. Please wait...');
+          user.socket.write(data, 'utf8');
+          break;
+        case '\\j':
+          let roomName = data.split(' ')[1];
+          console.log(`Attempt to join chat room ${roomName}...`);
           user.socket.write(data, 'utf8');
           break;
         default:

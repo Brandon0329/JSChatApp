@@ -2,9 +2,10 @@ const net = require('net');
 
 class ChatClient {
   constructor() {
-    this.socket = null; // May need multiple sockets for different chat rooms
+    this.socket = null;
 
     /* A map for connections to chat rooms. */
+    // <String, Socket>
     this.connections = new Map();
 
     this.username = '';
@@ -23,7 +24,10 @@ class ChatClient {
       let src = data.split(' ')[0];
       let message = data.slice(src.length + 1);
 
-      if(src === '$') {
+      if(src == '!') {
+        /* Urgent message. Print to client regardless. */
+        console.log(message);
+      } else if(src === '$') {
         /* Create a socket for the new chat room. */
         const [ roomName, roomPort ] = message.split(' ');
         let roomSocket = new net.Socket();
@@ -45,10 +49,11 @@ class ChatClient {
         });
 
         /* Connect and map this socket. */
-        roomSocket.connect(roomPort, host, function() {
-          console.log('New room has been created and the connection has been made. You may switch to chat room now.');
-          console.log('Print command to switch...');
+        roomSocket.connect(parseInt(roomPort), host, function() {
           clientRef.connections.set(roomName, roomSocket);
+          this.write(`\\c ${username}`);
+          console.log(`You are now connected to ${roomName}. You may switch to your chat room now.`);
+          console.log('Print command to switch...');
         });
         
       } else if(src !== clientRef.activeChat) {

@@ -1,8 +1,9 @@
 /* A chat room class. */
 const net = require('net');
+const util = require('./serverUtils');
 
+/* TODO: append a $ to the beginning of every chat room name. '$' = chatRoom. */
 class ChatRoom {
-  /* Maybe have the constructor take in args for each field... */
   constructor(serverName, port) {
     this.server = null;
     this.socket = null; // For communication to the main server.
@@ -17,7 +18,7 @@ class ChatRoom {
     let socket = new net.Socket();
     socket.setEncoding('utf8');
 
-    /* Store this chat room's refernce. */
+    /* Store this chat room's reference. */
     let roomRef = this;
 
     /* Receiving data from the main server. */
@@ -33,6 +34,7 @@ class ChatRoom {
       console.log('Handle error here');
     });
 
+    // Connect to main server
     socket.connect(8000, 'localhost');
 
     return socket;
@@ -40,11 +42,18 @@ class ChatRoom {
 
   /** Initialize this room's server instance. */
   serverInit() {
+    let roomRef = this;
+
     let server = net.createServer(function(socket) {
       socket.setEncoding('utf8');
 
       socket.on('data', function(data) {
         /* Do the same thing as in the main server. */
+        let command = utils[data.split(' ')[0].slice(1)];
+        if(!command)
+          socket.write('This is not a valid command.', 'utf8'); /* List commands here. */
+        else
+          command.bind(roomRef)(socket, data);
       });
 
       socket.on('error', function(err) {
@@ -61,6 +70,13 @@ class ChatRoom {
       console.log("Add error handling here...");
     });
 
+    // EVENT NOT EMMITTED UNTIL ALL CONNECTIONS DIE
+    server.on('close', function(err) {
+      /* Notify all members of room, and kick them out. */
+      /* Somehow update their client-side data structures. */
+
+    });
+
     return server;
   }
 
@@ -75,6 +91,13 @@ class ChatRoom {
   /** Start the server on port. Maybe don't pass in as args? */
   start(port) {
     this.server.listen(port, 'localhost');
+  }
+
+  /* Destroy all sockets connected to this server. */
+  purgeUsers() {
+    /* Probably should send message to all users before disconnecting them. */
+    for(let user of sockets.keys())
+      user.destroy();
   }
 }
 

@@ -6,7 +6,7 @@ const utils = {
    *  @param {String} command client's command
    */
   c(socket, command) {
-    console.log("new user connecting");
+    //console.log("new user connecting");
     let user = command.split(' ')[1];
 
     if(user === undefined)
@@ -25,6 +25,20 @@ const utils = {
     return;
   },
 
+  /** Add a user to a chat room.
+   *  @param {net.Socket} socket source client
+   *  @param {String} command client's command
+   */
+  j(socket, command) {
+    const roomName = command.split(' ')[1];
+    const chatRoom = this.chatRooms.get(roomName);
+
+    if(chatRoom)
+      socket.write(`$ ${roomName} ${chatRoom.port}`);
+    else
+      socket.write(`! Server> The chat room, ${roomName}, does not exist.`);
+  },
+
   /** List users on server.
    *  @param {net.Socket} socket source client
    *  @param {String} command client's command
@@ -38,19 +52,17 @@ const utils = {
    *  @param {String} command client's command
    */
   m(socket, command) {
-    // Debugging...
-    console.log(command);
-    /* Removing command from message. */
-    let message = command.slice(3);
-    let src = this.sockets.get(socket);
-    let dest = message.split(' ')[0];
+    const message = command.slice(3);
+    const src = this.sockets.get(socket);
+    const dest = message.split(' ')[0];
+    const serverName = this.serverName;
 
     // Need to handle case where user types bad username
-    console.log(message); // For debugging
-    if(dest === '$MAINSERVER') {
+    //console.log(message); // For debugging
+    if(dest === serverName) {
       for(let user of this.users.values())
         if(user !== socket)
-          user.write(`$MAINSERVER ${src}> ${message.slice(dest.length + 1)}`);
+          user.write(`${serverName} ${src}> ${message.slice(dest.length + 1)}`);
     }
     else if(this.users.get(dest) === undefined)
       socket.write('This user does not exist. Run \\l command to list users.');
@@ -74,7 +86,8 @@ const utils = {
       if(i == this.availablePorts.length) {
         /* Let user know that no more ports available; can't create chat room. */
         /* Find a way to make sure that this message is never queued. This is an IMPORTANT message. */
-        socket.write('$MAINSERVER Server> No more chat rooms can be created at this time. Try again later.');
+        /* Maybe put users on a notifcation list for when a chat room socket is available. */
+        socket.write('! Server> No more chat rooms can be created at this time. Try again later.');
       } else {
         this.availablePorts[i] = true;
         let chatRoom = new room(roomName, 8000 + i + 1);

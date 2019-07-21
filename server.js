@@ -17,6 +17,7 @@ class ChatServer {
     /* <String, ChatRooms> */
     this.chatRooms = new Map();
     this.availablePorts = []; // For chat rooms. ONLY 10 chatrooms allowed. Needed to bound this.
+    this.serverName = '$MAINSERVER';
   }
 
   init() {
